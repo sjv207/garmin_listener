@@ -1,6 +1,7 @@
 package uk.ac.exeter.feele.garminlistener;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,8 +11,14 @@ import java.util.Map;
 public class ListenController {
 
     @GetMapping("/listen")
-    public String listen(@RequestParam Map<String, String> allParams) {
-        System.out.println("Received params: " + allParams);
-        return "Received params: " + allParams;
+    public String listenGet(@RequestParam Map<String, String> allParams) {
+        System.out.println("Received GET params: " + allParams);
+        return "Received GET params: " + allParams;
+    }
+
+    @PostMapping("/listen")
+    public String listenPost(@RequestParam Map<String, String> allParams) {
+        System.out.println("Received POST params: " + allParams);
+        return "Received POST params: " + allParams;
     }
 }
