@@ -3,7 +3,7 @@ services:
   garmin-listener:
     build: .
     ports:
-      - "8085:8085"
+      - "${GARMIN_PORT}:8085"
     networks:
       - garmin_listener_network
 
