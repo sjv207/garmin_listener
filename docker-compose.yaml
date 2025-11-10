@@ -1,0 +1,6 @@
+version: '3.8'
+services:
+  garmin-listener:
+    build: .
+    ports:
+      - "8085:8085"
