@@ -1,0 +1,4 @@
+1. Add a README.md file....
+2. Replace system.prints with loggers
+3. Doesn't handle activityFiles - do we need them? We have to go get them if we do they are not posted (according to API docs)
+4. Look at fetching historical data on a user when they subscribe\

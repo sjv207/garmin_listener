@@ -2,7 +2,6 @@ package uk.ac.exeter.feele.garminlistener.service.impl;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ import uk.ac.exeter.feele.garminlistener.model.UserHealth;
 import uk.ac.exeter.feele.garminlistener.repository.GarminUserRepository;
 import uk.ac.exeter.feele.garminlistener.repository.UserActivityRepository;
 import uk.ac.exeter.feele.garminlistener.repository.UserHealthRepository;
-import uk.ac.exeter.feele.garminlistener.repository.UserTokenRepository;
 import uk.ac.exeter.feele.garminlistener.service.GarminService;
 
 @Service
@@ -29,8 +27,6 @@ public class GarminServiceImpl implements GarminService {
     private UserActivityRepository userActivityRepository;
     @Autowired
     private UserHealthRepository userHealthRepository;
-    @Autowired
-    private UserTokenRepository userTokenRepository;
 
     @Async
     @Override
@@ -95,7 +91,6 @@ public class GarminServiceImpl implements GarminService {
                             String date = healthData.path("calendarDate").asText(null);
                             long startTime = healthData.path("startTimeInSeconds").asLong(0);
                             logHealth(userId, key, date, startTime, healthData.toString());
-                            // TODO: map to entity and persist via userActivityRepository
                         }
                     }
                     break;
