@@ -1,6 +1,11 @@
 version: '3.8'
 services:
   garmin-listener:
+    environment:
+      GARMIN_MYSQL_DB: ${GARMIN_MYSQL_DB}
+      GARMIN_MYSQL_PASSWORD: ${GARMIN_MYSQL_PASSWORD}
+      GARMIN_MYSQL_HOST: ${GARMIN_MYSQL_HOST}
+      GARMIN_MYSQL_USER: ${GARMIN_MYSQL_USER}
     build: .
     ports:
       - "${GARMIN_PORT}:8085"
