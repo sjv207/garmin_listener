@@ -17,18 +17,18 @@ public class UserActivity {
     private GarminUser garminUser;
 
     @Column(name = "activity_id", unique = true, nullable = false)
-    private Integer activityId;
+    private String activityId;
 
     @Column(name = "activity_type", nullable = false, length = 45)
     private String activityType;
 
     @Column(name = "start_time", nullable = false)
-    private Integer startTime;
+    private Long startTime;
 
-    @Column(name = "durationIn_seconds", nullable = false)
+    @Column(name = "duration_in_seconds", nullable = false)
     private Integer durationInSeconds;
 
     @Lob
     @Column(name = "json_data", nullable = false)
-    private byte[] jsonData;
+    private String jsonData;
 }

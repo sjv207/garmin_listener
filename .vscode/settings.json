@@ -1,4 +1,11 @@
 {
     "java.compile.nullAnalysis.mode": "disabled",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    // Keep project and Maven in sync automatically so changes rebuild quickly
+    "java.configuration.updateBuildConfiguration": "automatic",
+    // Compile on save to produce updated classes for devtools to detect
+    "java.autobuild.enabled": true,
+    // Apply debugger hot code replace automatically when possible (no restart)
+    "java.debug.settings.hotCodeReplace": "auto",
+    // Save files when switching focus to trigger auto-builds quickly
+    "files.autoSave": "onFocusChange"
 }

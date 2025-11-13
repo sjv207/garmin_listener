@@ -7,6 +7,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema garmin_connect
 -- -----------------------------------------------------
+DROP SCHEMA IF EXISTS `garmin_connect` ;
 
 -- -----------------------------------------------------
 -- Schema garmin_connect
@@ -17,6 +18,8 @@ USE `garmin_connect` ;
 -- -----------------------------------------------------
 -- Table `garmin_connect`.`admin`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `garmin_connect`.`admin` ;
+
 CREATE TABLE IF NOT EXISTS `garmin_connect`.`admin` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `username` TEXT NOT NULL,
@@ -32,12 +35,15 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 -- Table `garmin_connect`.`garmin_user`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `garmin_connect`.`garmin_user` ;
+
 CREATE TABLE IF NOT EXISTS `garmin_connect`.`garmin_user` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `garmin_user_id` VARCHAR(50) NULL DEFAULT NULL,
+  `garmin_user_id` VARCHAR(50) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  INDEX `idx_garmin_user_id` (`garmin_user_id` ASC) VISIBLE)
+  INDEX `idx_garmin_user_id` (`garmin_user_id` ASC) VISIBLE,
+  UNIQUE INDEX `garmin_user_id_UNIQUE` (`garmin_user_id` ASC) VISIBLE)
 ENGINE = InnoDB
 AUTO_INCREMENT = 4
 DEFAULT CHARACTER SET = utf8mb4
@@ -47,6 +53,8 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 -- Table `garmin_connect`.`user_token`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `garmin_connect`.`user_token` ;
+
 CREATE TABLE IF NOT EXISTS `garmin_connect`.`user_token` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL,
@@ -74,19 +82,21 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 -- Table `garmin_connect`.`user_activity`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `garmin_connect`.`user_activity` ;
+
 CREATE TABLE IF NOT EXISTS `garmin_connect`.`user_activity` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `garmin_user_id` INT NOT NULL,
-  `activity_id` INT NOT NULL,
+  `activity_id` VARCHAR(20) NOT NULL,
   `activity_type` VARCHAR(45) NOT NULL,
-  `start_time` INT NOT NULL,
-  `durationIn_seconds` INT NOT NULL,
+  `start_time` BIGINT(12) NOT NULL,
+  `duration_in_seconds` INT NOT NULL,
   `json_data` BLOB NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   UNIQUE INDEX `activityId_UNIQUE` (`activity_id` ASC) VISIBLE,
-  INDEX `fk_user_activity_garmin_user1_idx` (`garmin_user_id` ASC) VISIBLE,
-  CONSTRAINT `fk_user_activity_garmin_user1`
+  INDEX `fk_UserActivith_garmin_user1_idx` (`garmin_user_id` ASC) VISIBLE,
+  CONSTRAINT `fk_UserActivith_garmin_user1`
     FOREIGN KEY (`garmin_user_id`)
     REFERENCES `garmin_connect`.`garmin_user` (`id`)
     ON DELETE NO ACTION
@@ -97,6 +107,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `garmin_connect`.`user_health`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `garmin_connect`.`user_health` ;
+
 CREATE TABLE IF NOT EXISTS `garmin_connect`.`user_health` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `garmin_user_id` INT NOT NULL,
@@ -104,8 +116,8 @@ CREATE TABLE IF NOT EXISTS `garmin_connect`.`user_health` (
   `calendar_date` DATE NOT NULL,
   `json_data` BLOB NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_user_health_garmin_user1_idx` (`garmin_user_id` ASC) VISIBLE,
-  CONSTRAINT `fk_user_health_garmin_user1`
+  INDEX `fk_UserHealth_garmin_user1_idx` (`garmin_user_id` ASC) VISIBLE,
+  CONSTRAINT `fk_UserHealth_garmin_user1`
     FOREIGN KEY (`garmin_user_id`)
     REFERENCES `garmin_connect`.`garmin_user` (`id`)
     ON DELETE NO ACTION

@@ -25,5 +25,5 @@ public class UserHealth {
 
     @Lob
     @Column(name = "json_data", nullable = false)
-    private byte[] jsonData;
+    private String jsonData;
 }
