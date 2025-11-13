@@ -20,8 +20,11 @@ public class UserHealth {
     @Column(name = "health_type", nullable = false, length = 45)
     private String healthType;
 
-    @Column(name = "calendar_date", nullable = false)
+    @Column(name = "calendar_date")
     private Date calendarDate;
+
+    @Column(name = "start_time")
+    private Long startTime;
 
     @Lob
     @Column(name = "json_data", nullable = false)

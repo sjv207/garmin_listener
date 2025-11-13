@@ -1,5 +1,9 @@
 package uk.ac.exeter.feele.garminlistener.service.impl;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Async;
@@ -10,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import uk.ac.exeter.feele.garminlistener.model.GarminUser;
 import uk.ac.exeter.feele.garminlistener.model.UserActivity;
+import uk.ac.exeter.feele.garminlistener.model.UserHealth;
 import uk.ac.exeter.feele.garminlistener.repository.GarminUserRepository;
 import uk.ac.exeter.feele.garminlistener.repository.UserActivityRepository;
 import uk.ac.exeter.feele.garminlistener.repository.UserHealthRepository;
@@ -51,11 +56,12 @@ public class GarminServiceImpl implements GarminService {
     }
 
     private void processRootNode(JsonNode root) {
-        // Iterate top-level fields: e.g., dailies, activities, healthSnapshot, pulseox, skinTemp
+        // Iterate top-level fields: e.g., dailies, activities, healthSnapshot, pulseox,
+        // skinTemp
         root.fields().forEachRemaining(entry -> {
             String key = entry.getKey();
             JsonNode value = entry.getValue();
-            
+
             System.out.println("Processing key: " + key);
 
             switch (key) {
@@ -64,69 +70,36 @@ public class GarminServiceImpl implements GarminService {
                         for (JsonNode act : value) {
                             logActivityDetails(act);
                         }
-                    }                
+                    }
                     break;
                 case "activities":
                     // Typically an array
                     if (value.isArray()) {
                         for (JsonNode act : value) {
-                            logActivityDetails(act);
+                            logActivity(act);
                         }
                     }
                     break;
-                case "dailies":
+                case "dailies": // Dropthrough
+                case "healthSnapshot": // Dropthrough
+                case "pulseox": // Dropthrough
+                case "skinTemp": // Dropthrough
+                case "sleeps": // Dropthrough
+                case "epochs": // Dropthrough
+                case "stressDetails": // Dropthrough
+                case "allDayRespiration": // Dropthrough
+                case "userMetrics": // Dropthrough
                     if (value.isArray()) {
-                        for (JsonNode daily : value) {
-                            String userId = daily.path("userId").asText(null);
-                            String date = daily.path("calendarDate").asText(null);
-                            int steps = daily.path("steps").asInt(0);
-                            int pushes = daily.path("pushes").asInt(0);
-                            int avgHr = daily.path("averageHeartRateInBeatsPerMinute").asInt(0);
-                            System.out.printf("Dailies user=%s date=%s steps=%d pushes=%d avgHr=%d\n",
-                                    userId, date, steps, pushes, avgHr);
+                        for (JsonNode healthData : value) {
+                            String userId = healthData.path("userId").asText(null);
+                            String date = healthData.path("calendarDate").asText(null);
+                            long startTime = healthData.path("startTimeInSeconds").asLong(0);
+                            logHealth(userId, key, date, startTime, healthData.toString());
                             // TODO: map to entity and persist via userActivityRepository
                         }
                     }
                     break;
-                case "healthSnapshot":
-                    if (value.isArray()) {
-                        for (JsonNode snap : value) {
-                            String userId = snap.path("userId").asText(null);
-                            String date = snap.path("calendarDate").asText(null);
-                            // Summaries is an array of metric summaries
-                            for (JsonNode summary : snap.path("summaries")) {
-                                String type = summary.path("summaryType").asText("");
-                                double avg = summary.path("avgValue").asDouble(Double.NaN);
-                                System.out.printf("HealthSnapshot user=%s date=%s type=%s avg=%.2f\n",
-                                        userId, date, type, avg);
-                            }
-                            // TODO: map to UserHealth entity
-                        }
-                    }
-                    break;
-                case "pulseox":
-                    if (value.isArray()) {
-                        for (JsonNode p : value) {
-                            String userId = p.path("userId").asText(null);
-                            String date = p.path("calendarDate").asText(null);
-                            JsonNode samples = p.path("timeOffsetSpo2Values");
-                            int sampleCount = samples.isObject() ? samples.size() : 0;
-                            System.out.printf("PulseOx user=%s date=%s samples=%d\n", userId, date, sampleCount);
-                            // Iterate map entries if needed:
-                            // samples.fields().forEachRemaining(s -> { int offset = Integer.parseInt(s.getKey()); int spo2 = s.getValue().asInt(); });
-                        }
-                    }
-                    break;
-                case "skinTemp":
-                    if (value.isArray()) {
-                        for (JsonNode t : value) {
-                            String userId = t.path("userId").asText(null);
-                            String date = t.path("calendarDate").asText(null);
-                            double avgDev = t.path("avgDeviationCelsius").asDouble(Double.NaN);
-                            System.out.printf("SkinTemp user=%s date=%s avgDev=%.3f\n", userId, date, avgDev);
-                        }
-                    }
-                    break;
+
                 default:
                     System.out.println("Unknown data type: " + key);
             }
@@ -134,10 +107,11 @@ public class GarminServiceImpl implements GarminService {
     }
 
     private void logActivityDetails(JsonNode node) {
-        if (node == null || node.isNull()) return;
+        if (node == null || node.isNull())
+            return;
         String userId = node.path("userId").asText(null);
         String activityId = node.path("activityId").asText(null);
-        
+
         JsonNode summary = node.path("summary");
         String activityType = summary.path("activityType").asText(null);
         long startTime = summary.path("startTimeInSeconds").asLong(0);
@@ -146,14 +120,37 @@ public class GarminServiceImpl implements GarminService {
         System.out.printf("Activity user=%s, type=%s, start=%d, duration=%d\n",
                 userId, activityType, startTime, durationInSeconds);
 
+        createOrUpdateActivity(node, userId, activityId, activityType, startTime, durationInSeconds);
+    }
+
+    private void logActivity(JsonNode node) {
+        if (node == null || node.isNull())
+            return;
+        String userId = node.path("userId").asText(null);
+        String activityId = node.path("activityId").asText(null);
+        String activityType = node.path("activityType").asText(null);
+        long startTime = node.path("startTimeInSeconds").asLong(0);
+        int durationInSeconds = node.path("durationInSeconds").asInt(0);
+
+        System.out.printf("Activity user=%s, type=%s, start=%d, duration=%d\n",
+                userId, activityType, startTime, durationInSeconds);
+        createOrUpdateActivity(node, userId, activityId, activityType, startTime, durationInSeconds);
+    }
+
+    private void createOrUpdateActivity(JsonNode node, String userId, String activityId,
+            String activityType, long startTime, int durationInSeconds) {
 
         // See if this activity already exists, if it does updated it, else create new
         UserActivity activity = userActivityRepository.findByActivityId(activityId);
         if (activity == null) {
             activity = new UserActivity();
             activity.setActivityId(activityId);
-        
+
             GarminUser garminUser = garminUserRepository.findByGarminUserId(userId);
+            if (garminUser == null) {
+                System.out.println("Unknown Garmin user: " + userId);
+                return;
+            }
             activity.setActivityId(activityId);
             activity.setActivityType(activityType);
             activity.setStartTime(startTime);
@@ -173,5 +170,29 @@ public class GarminServiceImpl implements GarminService {
             System.out.println("Updated activity: " + activityId);
         }
 
+    }
+
+    private void logHealth(String userId, String healthType, String date, long startTime, String jsonData) {
+        GarminUser garminUser = garminUserRepository.findByGarminUserId(userId);
+        if (garminUser == null) {
+            System.out.println("Unknown Garmin user: " + userId);
+            return;
+        }
+        UserHealth health = new UserHealth();
+        health.setGarminUser(garminUser);
+        health.setHealthType(healthType);
+        health.setStartTime(startTime);
+        if (date != null) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                java.util.Date parsedDate = sdf.parse(date);
+                health.setCalendarDate(new java.sql.Date(parsedDate.getTime()));
+            } catch (ParseException e) {
+                System.out.println("Failed to parse date: " + date);
+            }
+        }
+        health.setJsonData(jsonData);
+        userHealthRepository.save(health);
+        System.out.println("Saved health data for user=" + userId + " date=" + date);
     }
 }
